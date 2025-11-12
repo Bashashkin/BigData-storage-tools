@@ -1,0 +1,222 @@
+networks:
+  default:
+    name: nosql-platform
+
+services:
+  #  ================================== Redis ========================================== #
+  redis-1:
+    image: bitnami/redis:7.2
+    hostname: redis-1
+    container_name: redis-1
+    labels:
+      com.platys.name: redis
+      com.platys.description: Key-value store
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PORT_NUMBER=6379
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_AOF_ENABLED=yes
+      - REDIS_RDB_POLICY_DISABLED=yes
+    volumes:
+      - ./data-transfer:/data-transfer
+    command: /opt/bitnami/scripts/redis/run.sh --loglevel notice
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, redis-cli --no-auth-warning ping | grep PONG]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    hostname: redis-commander
+    labels:
+      com.platys.name: redis-commander
+      com.platys.description: Graphical interface for Redis
+      com.platys.webui.title: Redis Commander UI
+      com.platys.webui.url: http://localhost:28119
+    ports:
+      - 28119:8081
+    environment:
+      - REDIS_HOST=redis-1
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD='abc123!'
+      - REDIS_DB=0
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+
+  #  ================================== Cassandra ========================================== #
+  cassandra-1:
+    image: bitnami/cassandra:4.1
+    container_name: cassandra-1
+    hostname: cassandra-1
+    labels:
+      com.platys.name: cassandra
+      com.platys.description: wide-column NoSQL database
+    ports:
+      - 29042:9042
+      - 7199:7199
+      - 9160:9160
+    environment:
+      - CASSANDRA_CLUSTER_NAME="Test Cluster"
+      - CASSANDRA_DATACENTER=se1
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_NUM_TOKENS=128
+      - LOCAL_JMX=no
+    volumes:
+      - ./data-transfer:/data-transfer
+      - ./conf/cassandra/jmxremote.access:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/management/jmxremote.access
+      - ./conf/cassandra/jmxremote.password:/etc/cassandra/jmxremote.password
+    restart: unless-stopped
+
+  cassandra-web:
+    image: trivadis/cassandra-web
+    container_name: cassandra-web
+    hostname: cassandra-web
+    labels:
+      com.platys.name: cassandra-web
+      com.platys.description: Cassandra Web UI
+      com.platys.webui.title: Cassandra Web UI
+      com.platys.webui.url: http://localhost:28200
+    ports:
+      - 28200:3000
+    environment:
+      - CASSANDRA_HOSTNAME=cassandra-1
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USERNAME=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+
+  #  ================================== MongoDB ========================================== #
+  mongo-1:
+    image: mongo:7.0
+    container_name: mongo-1
+    hostname: mongo-1
+    labels:
+      com.platys.name: mongodb
+      com.platys.description: Document NoSQL database
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=abc123!
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/data/log
+    volumes:
+      - ./data-transfer:/data-transfer
+      - ./init/mongo:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    hostname: mongo-express
+    labels:
+      com.platys.name: mongo-express
+      com.platys.description: MongoDB UI
+      com.platys.webui.title: Mongo Express UI
+      com.platys.webui.url: http://localhost:28203
+    ports:
+      - 28203:8081
+    environment:
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_MONGODB_SERVER=mongo-1
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=abc123!
+      - ME_CONFIG_OPTIONS_EDITORTHEME=default
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+
+  admin-mongo:
+    image: adicom/admin-mongo:latest
+    container_name: admin-mongo
+    hostname: admin-mongo
+    labels:
+      com.platys.name: admin-mongo
+      com.platys.description: MongoDB Admin UI
+      com.platys.webui.title: Admin Mongo UI
+      com.platys.webui.url: http://localhost:28204
+    ports:
+      - 28204:1234
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+
+  #  ================================== Neo4J ========================================== #
+  neo4j-1:
+    image: neo4j:5.19
+    hostname: neo4j-1
+    container_name: neo4j-1
+    labels:
+      com.platys.name: neo4j
+      com.platys.description: Native graph database management system
+      com.platys.webui.title: Neo4J UI
+      com.platys.webui.url: http://localhost:7474
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_server_bolt_listen__address=0.0.0.0:7687
+      - NEO4J_AUTH=neo4j/abc123abc123
+      - NEO4J_PLUGINS=[""]
+      - NEO4J_dbms_security_allow__csv__import__from__file__urls=False
+      - NEO4J_server_directories_import=
+      - NEO4J_server_logs_debug_enabled=False
+      - EXTENSION_SCRIPT=
+      - NEO4J_apoc_export_file_enabled=False
+      - NEO4J_apoc_import_file_enabled=False
+      - NEO4J_apoc_import_file_use__neo4j__config=True
+      - NEO4J_apoc_trigger_enabled=False
+      - NEO4J_apoc_trigger_refresh=60000
+    volumes:
+      - ./data-transfer:/data-transfer
+      - ./init/neo4j:/init
+      - ./plugins/neo4j/:/plugins:rw
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, wget --no-verbose --tries=1 --spider localhost:7474 || exit 1]
+      interval: 15s
+      timeout: 30s
+      retries: 10
+
+  #  ================================== Jupyter ========================================== #
+  jupyter:
+    image: jupyter/minimal-notebook:latest
+    container_name: jupyter
+    hostname: jupyter
+    labels:
+      com.platys.name: jupyter
+      com.platys.description: Web-based interactive development environment for notebooks, code, and data
+      com.platys.webui.title: Jupyter UI
+      com.platys.webui.url: http://localhost:28888
+    ports:
+      - 28888:8888
+      - 14040-14044:4040-4044
+    user: root
+    environment:
+      JUPYTER_ENABLE_LAB: "'yes'"
+      GRANT_SUDO: "'yes'"
+      JUPYTER_TOKEN: abc123!
+      DOCKER_STACKS_JUPYTER_CMD: lab
+    volumes:
+      - ./data-transfer:/data-transfer
+      - ./scripts/docker/docker-maven-download.sh:/maven-download.sh
+    command:
+      - bash
+      - -c
+      - |
+        start-notebook.sh
+    restart: unless-stopped
+
+volumes:
+  data-transfer-vol:
+    name: data_transfer_vol
