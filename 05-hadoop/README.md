@@ -12,7 +12,7 @@ HDFS, выполнить загрузку и простейшую обработ
 ## Задание:
 
 Рынок недвижимости - Средняя цена и подсчет объектов по району (HiveQL)
-* ссылка на датасет: https://www.kaggle.com/datasets/dansbecker/melbourne-housing-snapshot
+  * [ссылка на датасет](https://www.kaggle.com/datasets/dansbecker/melbourne-housing-snapshot)
 
 ## Ход работы
 
