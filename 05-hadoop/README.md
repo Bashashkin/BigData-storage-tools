@@ -286,9 +286,9 @@ finally:
 
 <img width="1468" height="727" alt="image" src="https://github.com/user-attachments/assets/9c6f161d-5e26-402d-bf57-9e1f6c1aff99" />
 
-<img width="1486" height="442" alt="image" src="https://github.com/user-attachments/assets/7b6bbb0a-910f-421e-a24b-9cbf0780a477" />
+<img width="1148" height="765" alt="image" src="https://github.com/user-attachments/assets/b4e4bc01-73f2-4833-9655-7de4ecbfbf9c" />
 
-<img width="1243" height="366" alt="image" src="https://github.com/user-attachments/assets/03bc9821-6a22-4823-b720-0b07c1dcbd6d" />
+<img width="1486" height="442" alt="image" src="https://github.com/user-attachments/assets/7b6bbb0a-910f-421e-a24b-9cbf0780a477" />
 
 
 ## Результат анализа
